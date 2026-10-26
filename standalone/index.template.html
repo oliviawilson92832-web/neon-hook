@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#05010f" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="NEON HOOK — a high-speed neon grapple-hook arcade runner. Swing, fling, dodge lasers and outrun the firewall." />
+    <title>NEON HOOK — Grapple Runner</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305010f'/%3E%3Ccircle cx='32' cy='14' r='6' fill='none' stroke='%233cf2ff' stroke-width='4'/%3E%3Cpath d='M32 20v18a10 10 0 1 1-10-10' fill='none' stroke='%23ff3df0' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <!-- Official CrazyGames HTML5 SDK v3 — must load before the game code -->
+    <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+    <style>
+      html, body { background: #05010f; margin: 0; height: 100%; overflow: hidden; }
+      /* Pre-hydration background so there is never a white flash */
+      #boot { position: fixed; inset: 0; display: grid; place-items: center; background: #05010f; z-index: 50; }
+      #boot div { font-family: system-ui, sans-serif; color: rgba(60,242,255,.7); font-size: 12px; letter-spacing: .3em; }
+    </style>
+    <style>/*__INLINE_CSS__*/</style>
+  </head>
+  <body>
+    <div id="boot"><div>LOADING…</div></div>
+
+    <div id="app">
+      <canvas id="game" aria-label="Neon Hook game canvas"></canvas>
+
+      <!-- ═══════════ HUD ═══════════ -->
+      <div id="hud" class="dim">
+        <div class="hud-top">
+          <div class="hud-l">
+            <div class="hud-lbl">SCORE</div>
+            <div id="hud-score" class="neon-cyan">0</div>
+            <div class="hud-sub">
+              <span id="hud-dist">0 m</span>
+              <span class="hud-best">BEST <span id="hud-best">0</span></span>
+            </div>
+          </div>
+
+          <div class="hud-c">
+            <div id="hud-mult" data-level="1">x1</div>
+            <div id="hud-multbar" class="bar"><i></i></div>
+            <div id="energy-wrap" data-od="0"><i></i></div>
+            <div class="od-lbl">OVERDRIVE</div>
+          </div>
+
+          <div class="hud-r">
+            <button id="btn-sound" class="btn-ghost icon-btn" type="button" aria-label="Mute sound">
+              <svg id="ico-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none" />
+                <path d="M16 9a4 4 0 0 1 0 6" />
+                <path d="M18.5 6.5a7.5 7.5 0 0 1 0 11" />
+              </svg>
+            </button>
+            <button id="btn-pause" class="btn-ghost icon-btn" type="button" aria-label="Pause">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="5" width="4" height="14" rx="1" />
+                <rect x="14" y="5" width="4" height="14" rx="1" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ MAIN MENU ═══════════ -->
+      <div id="menu" class="screen hidden">
+        <div class="wrap wrap2">
+          <div class="col rise-in">
+            <div class="eyebrow">ARCADE GRAPPLE RUNNER</div>
+            <h1 class="title title-flicker font-display">
+              <span class="neon-cyan">NEON</span><br /><span class="neon-pink">HOOK</span>
+            </h1>
+            <p class="tagline short-hide">
+              Swing through a collapsing neon city. Grab, fling, thread the lasers — and outrun the firewall.
+            </p>
+
+            <label class="name-row short-tight">
+              <span class="name-label">CALLSIGN</span>
+              <input id="callsign" maxlength="10" spellcheck="false" autocomplete="off" placeholder="PILOT" aria-label="Callsign for the high score table" />
+            </label>
+
+            <button id="btn-play" class="btn-neon pulse-glow play-btn short-tight" type="button">▶ PLAY</button>
+
+            <div class="hint kbd-hint short-tight">
+              <kbd>SPACE</kbd> start · <kbd>ESC</kbd> pause · <kbd>M</kbd> mute
+            </div>
+            <div class="hint-dim short-hide">Tip: keep holding PLAY to grab the first peg instantly.</div>
+
+            <div id="menu-toggles" class="chiprow short-tight"></div>
+          </div>
+
+          <div class="side panel rounded-2xl" style="animation-delay: 80ms">
+            <div class="tabs">
+              <button class="tab" data-tab="how" type="button">HOW TO PLAY</button>
+              <button class="tab" data-tab="scores" type="button">HIGH SCORES</button>
+            </div>
+            <div id="pane-how">
+              <ul class="how">
+                <li>
+                  <div class="how-ico" style="color: #67e8f9">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                      <circle cx="12" cy="5" r="2.5" />
+                      <path d="M12 7.5v6.5a4 4 0 1 1-4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="how-t" style="color: #67e8f9">HOLD TO GRAPPLE</div>
+                    <div class="how-d">Hold <kbd>SPACE</kbd>, click or touch — your hook snaps to the peg with the spinning reticle.</div>
+                  </div>
+                </li>
+                <li>
+                  <div class="how-ico" style="color: #f0abfc">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 19c4-1 7-5 9-10" />
+                      <path d="M12 9l3-5 1 5" />
+                      <path d="M16 4l5 2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="how-t" style="color: #f0abfc">RELEASE TO FLING</div>
+                    <div class="how-d">Let go on the upswing. Releasing around 45° gives a PERFECT speed boost.</div>
+                  </div>
+                </li>
+                <li>
+                  <div class="how-ico" style="color: #fcd34d">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l6 10-6 10-6-10z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="how-t" style="color: #fcd34d">CHAIN FOR MULTIPLIER</div>
+                    <div class="how-d">Gems, near-misses and new grabs build your combo — up to x8. Stall and it resets.</div>
+                  </div>
+                </li>
+                <li>
+                  <div class="how-ico" style="color: #fef08a">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M13 2L4 14h6l-1 8 9-12h-6z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="how-t" style="color: #fef08a">OVERDRIVE</div>
+                    <div class="how-d">Fill the meter with gems: double gem value and smash straight through lasers.</div>
+                  </div>
+                </li>
+                <li>
+                  <div class="how-ico" style="color: #fb7185">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                      <path d="M4 20L20 4" />
+                      <path d="M2 22l2-2M20 4l2-2" />
+                      <circle cx="4" cy="20" r="1.5" fill="currentColor" />
+                      <circle cx="20" cy="4" r="1.5" fill="currentColor" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="how-t" style="color: #fb7185">STAY ALIVE</div>
+                    <div class="how-d">Dodge lasers, never touch the glowing void, and outrun the firewall behind you.</div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div id="pane-scores" class="hidden">
+              <div class="board-head">
+                <div class="board-t">HIGH SCORES</div>
+                <div class="board-n">TOP 10</div>
+              </div>
+              <div id="menu-scores"></div>
+              <div id="reset-row" class="hidden" style="margin-top: 0.75rem; display: flex; justify-content: flex-end"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ PAUSE ═══════════ -->
+      <div id="pause" class="screen hidden">
+        <div class="center-box">
+          <div class="panel rounded-2xl rise-in">
+            <div class="eyebrow" style="letter-spacing: 0.5em">SYSTEM HALTED</div>
+            <h2 class="pause-t neon-cyan font-display">PAUSED</h2>
+            <div class="stack">
+              <button id="btn-resume" class="btn-neon rounded-xl" type="button">▶ RESUME</button>
+              <button id="btn-restart" class="btn-ghost rounded-xl" type="button" style="font-size: 0.875rem">↻ RESTART RUN</button>
+              <button id="btn-pmenu" class="btn-ghost rounded-xl" type="button" style="font-size: 0.875rem">⌂ MAIN MENU</button>
+            </div>
+            <div id="pause-toggles" class="chiprow short-tight"></div>
+            <p class="hint kbd-hint short-hide" style="margin-top: 1rem"><kbd>ESC</kbd> resume · <kbd>R</kbd> restart</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════ GAME OVER ═══════════ -->
+      <div id="over" class="screen hidden">
+        <div class="wrap wrap2">
+          <div class="col rise-in">
+            <div id="go-cause" class="go-cause">SWALLOWED BY THE VOID</div>
+            <h2 class="go-title neon-red font-display glitch" data-text="SIGNAL LOST">SIGNAL LOST</h2>
+
+            <div class="go-badge" id="go-badge"></div>
+
+            <div class="go-score-lbl short-hide">FINAL SCORE</div>
+            <div id="go-score" class="go-score neon-cyan">0</div>
+
+            <div id="go-stats" class="stats short-tight"></div>
+
+            <div class="actions short-tight">
+              <div id="go-actions-2" class="actions-2 hidden">
+                <button id="btn-revive" class="btn-neon" type="button">
+                  ▶ REVIVE <span class="ad-tag">AD</span>
+                </button>
+                <button id="btn-retry2" class="btn-neon" type="button">↻ RETRY</button>
+              </div>
+              <div id="go-actions-1" class="actions-1">
+                <button id="btn-retry" class="btn-neon btn-pink pulse-glow" type="button">↻ RETRY</button>
+                <button id="btn-omenu" class="btn-ghost" type="button">MENU</button>
+              </div>
+              <p id="go-ad-note" class="ad-note hidden"></p>
+            </div>
+
+            <div id="go-ad-err" class="ad-err hidden"></div>
+
+            <button id="btn-omenu2" class="btn-ghost menu-link hidden" type="button">MENU</button>
+
+            <div id="go-hint" class="go-hint kbd-hint"></div>
+          </div>
+
+          <div class="side panel rounded-2xl" style="animation-delay: 100ms" data-noretry>
+            <div class="board-head">
+              <div class="board-t">LOCAL LEGENDS</div>
+              <div class="board-n">TOP 10</div>
+            </div>
+            <div id="over-scores"></div>
+          </div>
+        </div>
+
+        <div id="ad-overlay" class="hidden">
+          <div class="col">
+            <div class="spinner"></div>
+            <div id="ad-lbl" class="ad-lbl neon-cyan">LOADING AD</div>
+            <div id="ad-sub" class="ad-sub">Hang tight…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scanlines"></div>
+    </div>
+
+    <script>/*__INLINE_JS__*/</script>
+  </body>
+</html>
